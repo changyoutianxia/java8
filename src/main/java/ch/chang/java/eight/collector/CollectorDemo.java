@@ -7,7 +7,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.DoubleBinaryOperator;
+import java.util.function.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class CollectorDemo {
@@ -234,15 +235,81 @@ public class CollectorDemo {
         Hashtable<Dish.Type, Double> kvThree = menu.stream().collect(Collectors.toMap(Dish::getType, Dish::getCalories, (aDouble, aDouble2) -> aDouble + aDouble2, Hashtable::new));
         Optional.ofNullable(kvThree).ifPresent(System.out::println);
     }
+
     @Test
-    public void toList(){
+    public void toList() {
         List<Dish> collect = menu.stream().filter(dish -> Dish.Type.FISH.equals(dish.getType())).collect(Collectors.toList());
         Optional.ofNullable(collect).ifPresent(System.out::println);
     }
+
     @Test
-    public void toSet(){
+    public void toSet() {
         Set<Dish.Type> collect = menu.stream().map(Dish::getType).collect(Collectors.toSet());
         Optional.ofNullable(collect).ifPresent(System.out::println);
+    }
+
+    class ToListCollector<T> implements Collector<T, List<T>, List<T>> {
+        /**
+         * 创建容器
+         *
+         * @return
+         */
+        @Override
+        public Supplier<List<T>> supplier() {
+            return ArrayList::new;
+        }
+
+        /**
+         * 遍历Stream 后给容器的操作
+         *
+         * @return
+         */
+        @Override
+        public BiConsumer<List<T>, T> accumulator() {
+            return List::add;
+        }
+
+        /**
+         * 在ForkJoin 的时候的合并方式
+         *
+         * @return
+         */
+        @Override
+        public BinaryOperator<List<T>> combiner() {
+            return (left, right) -> {
+                left.addAll(right);
+                return left;
+            };
+        }
+
+        /**
+         * 返回自己
+         *
+         * @return
+         */
+        @Override
+        public Function<List<T>, List<T>> finisher() {
+            return t -> t;
+        }
+
+        /**
+         * 描述
+         */
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Collections.unmodifiableSet(EnumSet.of(Characteristics.CONCURRENT, Characteristics.IDENTITY_FINISH));
+        }
+    }
+
+    @Test
+    public void myCollector() {
+        ToListCollector<Dish> dishListListToListCollector = new ToListCollector<>();
+        List<Dish> collect = menu.stream().collect(dishListListToListCollector);
+        Optional.ofNullable(collect).ifPresent(dishes -> {
+            System.out.println(dishes.getClass());
+            System.out.println(dishes);
+        });
+
     }
 
 
