@@ -187,5 +187,63 @@ public class CollectorDemo {
         System.out.println(doubleSummaryStatistics.getMax());
     }
 
+    /**
+     * int long double
+     */
+    @Test
+    public void summing() {
+        Double collect = menu.stream().collect(Collectors.summingDouble(Dish::getCalories));
+        System.out.println(collect);
+        //对比
+        double sum = menu.stream().map(Dish::getCalories).mapToDouble(Double::intValue).sum();
+        System.out.println(sum);
+    }
+
+    @Test
+    public void toCollection() {
+        LinkedList<Dish> collect = menu.stream().filter(dish -> dish.getCalories() > 600).collect(Collectors.toCollection(LinkedList::new));
+        Optional.ofNullable(collect).ifPresent(System.out::println);
+    }
+
+    @Test
+    public void concurrentMap() {
+        ConcurrentMap<String, Double> kvOne = menu.stream().collect(Collectors.toConcurrentMap(Dish::getName, Dish::getCalories));
+        Optional.ofNullable(kvOne).ifPresent(System.out::println);
+
+        ConcurrentMap<Dish.Type, Double> kvTwo = menu.stream().collect(Collectors.toConcurrentMap(Dish::getType, Dish::getCalories, (aDouble, aDouble2) -> aDouble + aDouble2));
+        Optional.ofNullable(kvTwo).ifPresent(System.out::println);
+
+        ConcurrentSkipListMap<Dish.Type, Double> kvThree = menu.stream().collect(Collectors.toConcurrentMap(Dish::getType, Dish::getCalories, (aDouble, aDouble2) -> aDouble + aDouble2, ConcurrentSkipListMap::new));
+        Optional.ofNullable(kvThree).ifPresent(System.out::println);
+    }
+
+    /**
+     * 同上
+     */
+    @Test
+    public void map() {
+        Map<String, Double> kvOne = menu.stream().collect(Collectors.toMap(Dish::getName, Dish::getCalories));
+        Optional.ofNullable(kvOne).ifPresent(stringDoubleMap -> {
+            System.out.println(stringDoubleMap);
+            System.out.println(stringDoubleMap.getClass());
+        });
+
+        Map<Dish.Type, Double> kvTwo = menu.stream().collect(Collectors.toMap(Dish::getType, Dish::getCalories, (aDouble, aDouble2) -> aDouble + aDouble2));
+        Optional.ofNullable(kvTwo).ifPresent(System.out::println);
+
+        Hashtable<Dish.Type, Double> kvThree = menu.stream().collect(Collectors.toMap(Dish::getType, Dish::getCalories, (aDouble, aDouble2) -> aDouble + aDouble2, Hashtable::new));
+        Optional.ofNullable(kvThree).ifPresent(System.out::println);
+    }
+    @Test
+    public void toList(){
+        List<Dish> collect = menu.stream().filter(dish -> Dish.Type.FISH.equals(dish.getType())).collect(Collectors.toList());
+        Optional.ofNullable(collect).ifPresent(System.out::println);
+    }
+    @Test
+    public void toSet(){
+        Set<Dish.Type> collect = menu.stream().map(Dish::getType).collect(Collectors.toSet());
+        Optional.ofNullable(collect).ifPresent(System.out::println);
+    }
+
 
 }
